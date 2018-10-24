@@ -38,6 +38,8 @@ usage(const char* prog)
            "Number of sequential appends to measure [default 1000]\n");
     printf("  --direct=yes|no  "
            "Whether to use O_DIRECT [default no]\n");
+    printf("  --nvme=yes|no  "
+           "To benefet NVME: flush distant blocks concurrently [default no]\n");
     printf("  --file=NAME      "
            "File to create/truncate and write into [default bench.dat]\n");
     printf("  --help           "
@@ -54,6 +56,7 @@ main(int argc, char** argv)
     // Set defaults.
     uint64_t count = 1000;
     bool direct = false;
+    bool nvme = false;
     const char* filename = "bench.dat";
     off_t offset = 0;
     uint64_t size = 1;
@@ -63,13 +66,14 @@ main(int argc, char** argv)
         static struct option longOptions[] = {
            {"count",  required_argument, NULL, 'c'},
            {"direct", required_argument, NULL, 'd'},
+           {"nvme",   required_argument, NULL, 'n'},
            {"file",   required_argument, NULL, 'f'},
            {"offset", required_argument, NULL, 'o'},
            {"size",   required_argument, NULL, 's'},
            {"help",  no_argument, NULL, 'h'},
            {0, 0, 0, 0}
         };
-        int c = getopt_long(argc, argv, "c:d:f:ho:s:", longOptions, NULL);
+        int c = getopt_long(argc, argv, "c:d:n:f:ho:s:", longOptions, NULL);
 
         // Detect the end of the options.
         if (c == -1) {
@@ -83,6 +87,9 @@ main(int argc, char** argv)
             case 'd':
                 direct = (strcmp(optarg, "yes") == 0);
                 break;
+            case 'n':
+                nvme = (strcmp(optarg, "yes") == 0);
+		break;
             case 'h':
                 usage(argv[0]);
                 exit(0);
