@@ -169,12 +169,30 @@ main(int argc, char** argv)
         fprintf(stderr, "clock_gettime failed: %s\n", strerror(errno));
         exit(1);
     }
-    uint64_t i;
-    for (i = 0; i < count; ++i) {
-        ssize_t written = write(fd, buf, size);
-        if (written != size) {
-            fprintf(stderr, "write failed: %s\n", strerror(errno));
-            exit(1);
+    if (nvme) {
+        uint64_t i, j;
+        for (j = 0; j < 10; ++j) {
+            for (i = 0; i < count/10; ++i) {
+                ssize_t written = pwrite(fd, buf, size, offset+i*size*10);
+                if (written != size) {
+                    fprintf(stderr, "write failed: %s\n", strerror(errno));
+                    exit(1);
+                }
+            }
+            r = fdatasync(fd);
+            if (r != 0) {
+                fprintf(stderr, "fdatasync failed: %s\n", strerror(errno));
+                exit(1);
+            }
+        }
+    } else {
+        uint64_t i;
+        for (i = 0; i < count; ++i) {
+            ssize_t written = pwrite(fd, buf, size, offset+i*size);
+            if (written != size) {
+                fprintf(stderr, "write failed: %s\n", strerror(errno));
+                exit(1);
+            }
         }
         r = fdatasync(fd);
         if (r != 0) {
